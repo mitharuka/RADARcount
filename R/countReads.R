@@ -91,13 +91,13 @@ countReads<-function(
     if(exon.length < 200) {return(NULL)}
     
     #creat a corresponding map from RNA to DNA
-    #RNA2DNA = 1:exon.length
-    #pointer = 1
-    #for (j in 1:no.exon){
-    #  RNA2DNA[pointer:(pointer+df.geneModel$width[j]-1) ]= RNA2DNA[pointer:(pointer+df.geneModel$width[j]-1)] + df.geneModel$start[j] -pointer
-    #  pointer = pointer + df.geneModel$width[j]
-    #}
-    #RNA2DNA = RNA2DNA + dna.range$start -1 #back to chromosome coordinates
+    RNA2DNA = 1:exon.length
+    pointer = 1
+    for (j in 1:no.exon){
+      RNA2DNA[pointer:(pointer+df.geneModel$width[j]-1) ]= RNA2DNA[pointer:(pointer+df.geneModel$width[j]-1)] + df.geneModel$start[j] -pointer
+      pointer = pointer + df.geneModel$width[j]
+    }
+    RNA2DNA = RNA2DNA + dna.range$start -1 #back to chromosome coordinates
     
     ## switch strand because stranded RNA library protocol sequence reverse strand
     if(strandToKeep == "opposite"){
@@ -124,10 +124,11 @@ countReads<-function(
       
     }
     
-    #mapping$chr = as.character(dna.range$seqnames)
-    #mapping$strand = as.character(dna.range$strand)
-    #rownames(mapping) = paste(geneName,slidingStart,sep = ",")
-    #geneRNA2DNA= rbind(geneRNA2DNA,mapping[c("chr","start","end","strand")])
+    mapping <- data.frame()
+    mapping$chr = as.character(dna.range$seqnames)
+    mapping$strand = as.character(dna.range$strand)
+    rownames(mapping) = paste(geneName,slidingStart,sep = ",")
+    geneRNA2DNA= rbind(geneRNA2DNA,mapping[c("chr","start","end","strand")])
     
     #count reads in all samples
     ba.IP = sapply(bamPath.IP,.countReadFromBam,which = range(geneModel),reads.strand = reads.strand,DNA2RNA = DNA2RNA,fragmentLength=fragmentLength,left=dna.range$start,sliding = slidingStart, binSize = binSize, paired = paired)
@@ -155,7 +156,8 @@ countReads<-function(
     dir.create(outputDir, showWarnings = FALSE, recursive = TRUE)
     saveRDS(data.out,paste0(outputDir,"/MeRIP_readCounts.RDS"))
   }
-  
-  
-  return(data.out)
+ 
+  data.out.list <- c("mapping" = mapping, "geneRNA2DNA" = geneRNA2DNA, "meripobject"=data.out)
+  return(data.out.list)
+       
 }
